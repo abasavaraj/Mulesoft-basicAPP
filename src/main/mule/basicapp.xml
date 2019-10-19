@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="90165301-7a21-48f0-a6ac-90a16a3eb42b" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="basicappFlow" doc:id="782739c7-6948-42ea-ad9c-b315986b4367" >
+		<http:listener doc:name="/* 8081" doc:id="923c5219-7d50-409d-92d1-e1a587617746" config-ref="HTTP_Listener_config" path="/*" allowedMethods="GET"/>
+		<ee:transform doc:name="Create HTML" doc:id="a997d0b7-eb60-482a-b10a-ea747245cb0a">
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml writeDeclaration = false
+---
+html @(lang:"en"): {    
+     head: {
+     	meta @(charset:"utf-8"):{},
+     	meta @(name:"viewport", content:"width=device-width, initial-scale=1, shrink-to-fit=no"):{},
+     	link @(rel:"stylesheet", href:"https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css", integrity:"sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T", crossorigin:"anonymous"):{},     	
+     	title: 'It works!'
+     },
+     body: {
+     	div @(class:"my-4 mx-4 alert alert-success", role:"alert"): {
+     		h4 @(class:"alert-heading"):'Well done, it works!',
+     		div: {
+     			span @(class:"badge badge-success"): app.name default 'Mule App',
+     			span: 'is successfully running.'
+     		},
+			hr:{},
+     		small @(class:"m-0"): 'Host ' ++ (server.ip default 'Unknown') ++ ' - Mule Runtime ' ++ (mule.version default 'Unknown') ++ ' - ' ++ now() as String {format: "yyyy.MM.dd 'at' HH:mm:ss"}
+     	},
+     	// JQuery - script @(src:"https://code.jquery.com/jquery-3.3.1.slim.min.js", integrity:"sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo", crossorigin:"anonymous"):' ',
+     	// Popper.js - script @(src:"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js", integrity:"sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1", crossorigin:"anonymous"):' ',
+     	script @(src:"https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js", integrity:"sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM", crossorigin:"anonymous"):' '
+     }
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value="#[payload]" doc:name="Change MIME Type" doc:id="b39bd446-0b5f-4659-81bd-6d147216e2dd" mimeType="text/html" />
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a7d5d6d8-6f3e-4b7e-a44f-f899be49abd9" >
+				<ee:transform doc:name="Set payload" doc:id="0b0338f3-3752-4ee8-813b-e74944408d57" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+"It doesn't work :/"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
